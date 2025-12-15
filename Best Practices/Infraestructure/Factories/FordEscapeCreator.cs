@@ -10,7 +10,7 @@ namespace Best_Practices.Infraestructure.Factories
             var builder = new CarBuilder();
             return builder
                 .SetModel("Escape")
-                .SetColor("Black")
+                .SetColor("Red")
                 .Build();
         }
     }
