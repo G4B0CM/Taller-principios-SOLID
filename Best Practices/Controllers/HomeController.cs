@@ -1,5 +1,4 @@
 ﻿using Best_Practices.Infraestructure.Factories;
-using Best_Practices.Infraestructure.Singletons;
 using Best_Practices.Models;
 using Best_Practices.Repositories;
 using Microsoft.AspNetCore.Mvc;
@@ -10,13 +9,15 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Best_Practices.Controllers
+namespace DesignPatterns.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
 
         private readonly IVehicleRepository _vehicleRepository;
+
+
 
         public HomeController(IVehicleRepository vehicleRepository, ILogger<HomeController> logger)
         {
@@ -27,28 +28,50 @@ namespace Best_Practices.Controllers
         public IActionResult Index()
         {
             var model = new HomeViewModel();
-            model.Vehicles = VehicleCollection.Instance.Vehicles;
+            model.Vehicles = _vehicleRepository.GetVehicles();
             string error = Request.Query.ContainsKey("error") ? Request.Query["error"].ToString() : null;
             ViewBag.ErrorMessage = error;
 
             return View(model);
         }
 
+
+
+        private Creator selectFactory(string model)
+        {
+            return model.ToLower() switch
+            {
+                "mustang" => new FordMustangCreator(),
+                "explorer" => new FordExplorerCreator(),
+                "escape" => new FordEscapeCreator(),
+                _ => throw new ArgumentException("Unkown model"),
+            };
+        }
+
         [HttpGet]
         public IActionResult AddMustang()
         {
-            var factory = new FordMustangCreator();
-            var vehicle = factory.Create();
-            _vehicleRepository.AddVehicle(vehicle);
+            var car = selectFactory("mustang")
+                .Create();
+            _vehicleRepository.AddVehicle(car);
             return Redirect("/");
         }
 
         [HttpGet]
         public IActionResult AddExplorer()
         {
-            var factory = new FordExplorerCreator();
-            var vehicle = factory.Create();
-            _vehicleRepository.AddVehicle(vehicle);
+            var car = selectFactory("explorer")
+                .Create();
+            _vehicleRepository.AddVehicle(car);
+            return Redirect("/");
+        }
+
+        [HttpGet]
+        public IActionResult AddEscape()
+        {
+            var car = selectFactory("escape")
+                .Create();
+            _vehicleRepository.AddVehicle(car);
             return Redirect("/");
         }
 
@@ -61,12 +84,12 @@ namespace Best_Practices.Controllers
                 vehicle.StartEngine();
                 return Redirect("/");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ViewBag.ErrorMessage = ex.Message;
                 return Redirect($"/?error={ex.Message}");
             }
-          
+
         }
 
         [HttpGet]
@@ -95,13 +118,13 @@ namespace Best_Practices.Controllers
                 vehicle.StopEngine();
                 return Redirect("/");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ViewBag.ErrorMessage = ex.Message;
                 return Redirect($"/?error={ex.Message}");
             }
-           
-           
+
+
         }
 
 
